@@ -1,0 +1,195 @@
+version: "1.0"
+description: "Test prompt set for bq-dataplex-mcp tool invocation quality"
+metadata:
+  created_at: "2026-07-23"
+  target: "informal invocation check on a handful of real prompts ('s own exit
+    criterion wording) -- unlike the original precedent's committed
+    90%-accuracy target, this suite has no pinned accuracy gate and is not wired into CI;
+'s Reference precedent section."
+  model_tested: "claude-opus-4-8"
+
+prompts:
+  # ====== Dataset enumeration (list_datasets) ======
+  - id: "dataset_01"
+    text: "What datasets exist in our BigQuery project?"
+    expected_tool: "list_datasets"
+    category: "dataset_enumeration"
+    rationale: "Open-ended request to enumerate datasets, no specific dataset named yet"
+
+  - id: "dataset_02"
+    text: "Show me all the schemas we have in GCP before I dig into one of them"
+    expected_tool: "list_datasets"
+    category: "dataset_enumeration"
+    rationale: "Explicit enumerate-before-drill-in phrasing"
+
+  - id: "dataset_03"
+    text: "List every dataset in the project"
+    expected_tool: "list_datasets"
+    category: "dataset_enumeration"
+    rationale: "Direct enumeration request"
+
+  # ====== Table enumeration (list_tables) ======
+  - id: "table_01"
+    text: "What tables are in the analytics dataset?"
+    expected_tool: "list_tables"
+    category: "table_enumeration"
+    rationale: "Dataset already known; asks what tables it contains"
+
+  - id: "table_02"
+    text: "List all tables inside the raw_events dataset"
+    expected_tool: "list_tables"
+    category: "table_enumeration"
+    rationale: "Direct table-enumeration request for a named dataset"
+
+  - id: "table_03"
+    text: "Can you query INFORMATION_SCHEMA.TABLES in the analytics dataset to tell me what tables exist?"
+    expected_tool: "list_tables"
+    category: "information_schema_trap"
+    rationale: "Explicitly names an INFORMATION_SCHEMA query, but list_tables is the cheaper, purpose-built path for the exact same question and should be preferred over execute_sql"
+
+  # ====== Table metadata (get_table_metadata) ======
+  - id: "metadata_01"
+    text: "What's the schema of the daily_active_users table -- what columns does it have?"
+    expected_tool: "get_table_metadata"
+    category: "table_metadata"
+    rationale: "Structural fact (column schema) about a known table"
+
+  - id: "metadata_02"
+    text: "How big is the events table -- row count and byte size?"
+    expected_tool: "get_table_metadata"
+    category: "table_metadata"
+    rationale: "Row/byte counts are structural facts get_table_metadata returns directly"
+
+  - id: "metadata_03"
+    text: "Query INFORMATION_SCHEMA.COLUMNS to show me the column types for the users table"
+    expected_tool: "get_table_metadata"
+    category: "information_schema_trap"
+    rationale: "Column-type facts are exactly what get_table_metadata already returns; should be preferred over an INFORMATION_SCHEMA execute_sql query"
+
+  # ====== Lineage (get_data_lineage) ======
+  - id: "lineage_01"
+    text: "Where does the data in daily_active_users come from?"
+    expected_tool: "get_data_lineage"
+    category: "lineage"
+    rationale: "Upstream-source question, the clearest lineage signal"
+
+  - id: "lineage_02"
+    text: "What downstream tables depend on the raw_events table?"
+    expected_tool: "get_data_lineage"
+    category: "lineage"
+    rationale: "Downstream-dependency question"
+
+  - id: "lineage_03"
+    text: "Can you show me a lineage diagram for the revenue_summary table?"
+    expected_tool: "get_data_lineage"
+    category: "lineage"
+    rationale: "Explicit diagram request, matches the Mermaid-diagram capability"
+
+  # ====== Data quality (get_data_quality_results) ======
+  - id: "quality_01"
+    text: "Is the daily_active_users table passing its data quality checks?"
+    expected_tool: "get_data_quality_results"
+    category: "data_quality"
+    rationale: "Direct pass/fail data-quality question"
+
+  - id: "quality_02"
+    text: "What's the completeness score for the events table's latest scan?"
+    expected_tool: "get_data_quality_results"
+    category: "data_quality"
+    rationale: "Asks for a scan dimension score"
+
+  - id: "quality_03"
+    text: "Are there any data quality issues with the revenue_summary table right now?"
+    expected_tool: "get_data_quality_results"
+    category: "data_quality"
+    rationale: "Data-quality-issue question, maps to the latest scan result"
+
+  # ====== Raw SQL (execute_sql) ======
+  - id: "sql_01"
+    text: "How many rows are in the daily_active_users table where country = 'US'?"
+    expected_tool: "execute_sql"
+    category: "execute_sql"
+    rationale: "Requires an actual row-level filter/aggregate, not a metadata fact"
+
+  - id: "sql_02"
+    text: "Give me the average session duration grouped by platform for the last 7 days"
+    expected_tool: "execute_sql"
+    category: "execute_sql"
+    rationale: "Aggregation over row data, no purpose-built tool covers this"
+
+  - id: "sql_03"
+    text: "Join daily_active_users with revenue_summary on user_id and show me total revenue per user"
+    expected_tool: "execute_sql"
+    category: "execute_sql"
+    rationale: "Multi-table join/aggregate over row contents"
+
+  # ====== Three-way disambiguation: get_table_metadata vs get_data_lineage vs get_data_quality_results ======
+  - id: "threeway_01"
+    text: "What's the partitioning scheme for the events table?"
+    expected_tool: "get_table_metadata"
+    category: "three_way_disambiguation"
+    rationale: "Unambiguous structural-fact question despite sharing (dataset_id, table_id) with the lineage/quality tools"
+
+  - id: "threeway_02"
+    text: "What upstream tables feed into the revenue_summary table?"
+    expected_tool: "get_data_lineage"
+    category: "three_way_disambiguation"
+    rationale: "Unambiguous upstream-lineage question"
+
+  - id: "threeway_03"
+    text: "Did last night's data quality scan pass for the revenue_summary table?"
+    expected_tool: "get_data_quality_results"
+    category: "three_way_disambiguation"
+    rationale: "Unambiguous pass/fail scan-result question"
+
+  - id: "threeway_04"
+    text: "Tell me about the daily_active_users table"
+    expected_tool: "get_table_metadata|get_data_lineage|get_data_quality_results"
+    category: "three_way_disambiguation"
+    rationale: "Genuinely ambiguous -- 'tell me about this table' has no single correct answer among the three (dataset_id, table_id) tools; any of the three is a defensible pick depending on unstated intent"
+
+  # ====== Health check (ping) ======
+  - id: "ping_01"
+    text: "Is the MCP service up and reachable?"
+    expected_tool: "ping"
+    category: "health_check"
+    rationale: "Liveness/connectivity check, not a real data question"
+
+categories_covered:
+  - dataset_enumeration: "3 prompts covering list_datasets"
+  - table_enumeration: "2 prompts covering list_tables, plus 1 shared with information_schema_trap"
+  - table_metadata: "2 prompts covering get_table_metadata, plus 1 shared with information_schema_trap"
+  - information_schema_trap: "2 prompts phrased as INFORMATION_SCHEMA queries that should resolve to list_tables/get_table_metadata instead of execute_sql"
+  - lineage: "3 prompts covering get_data_lineage"
+  - data_quality: "3 prompts covering get_data_quality_results"
+  - execute_sql: "3 prompts covering raw row-level querying/aggregation"
+  - three_way_disambiguation: "4 prompts covering the get_table_metadata / get_data_lineage / get_data_quality_results triangle, including 1 genuinely ambiguous multi-answer prompt"
+  - health_check: "1 prompt covering ping"
+
+notes: |
+  # Evaluation Notes
+
+  ## Prompt Design Principles
+  - Prompts mirror realistic questions a data engineer or analyst would ask about this
+    service's actual BigQuery/Dataplex/lineage surface.
+  - Each prompt maps to ONE primary tool (the discriminator), except threeway_04, whose
+    `expected_tool` is deliberately pipe-separated (`tool_a|tool_b|tool_c`) to encode a
+    genuinely ambiguous prompt -- scored correct if the model's answer is any one of them
+.
+  - The two `information_schema_trap` prompts are the highest-value
+    disambiguation target: an LLM reaching for `execute_sql` against
+    `INFORMATION_SCHEMA` instead of the purpose-built, cheaper `list_tables`/
+    `get_table_metadata` tool that already answers the same question.
+
+  ## Ambiguity Resolution
+  - "Tell me about the X table" -> any of get_table_metadata/get_data_lineage/
+    get_data_quality_results is defensible; scored as correct if the model picks any one.
+  - "Query INFORMATION_SCHEMA.* for Y" -> the purpose-built enumeration/metadata tool,
+    not execute_sql -- these tools exist specifically to avoid that query pattern.
+
+  ## Results
+  - Model tested: [to be filled in by scripts/validate_prompts.py's ad hoc run]
+  - Test date: [to be filled in]
+  - Accuracy: [to be filled in]
+  - Failed prompts: [to be filled in]
+  - Edge cases identified: [to be filled in]

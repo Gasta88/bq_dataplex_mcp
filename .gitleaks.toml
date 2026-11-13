@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and documentation placeholders"
+paths = [
+    '''tests/.*''',
+]
+regexes = [
+    '''test-client-secret''',
+    '''my-client-secret''',
+    '''eyJ\.super-secret-token\.sig''',
+]

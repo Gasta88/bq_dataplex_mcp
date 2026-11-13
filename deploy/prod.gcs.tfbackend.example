@@ -1,0 +1,3 @@
+# Copy to prod.gcs.tfbackend and fill in a bucket you control.
+bucket = "my-terraform-state-bucket"
+prefix = "bq-dataplex-mcp/prod.tfstate"

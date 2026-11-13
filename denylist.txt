@@ -1,0 +1,15 @@
+# Case-insensitive regular expressions that must never appear in the public
+# repository. One pattern per line; blank lines and lines starting with "#"
+# are ignored. scripts/check_denylist.py scans tracked text files with these.
+\bjustplay
+\bjpd-
+\bdec-0
+\bhive\b
+\balvin\b
+\byvxkkbl2xa\b
+\bmetabase\b
+data-ecr
+\bgastaldello\b
+\bjaimegm\b
+\bamadou\b
+\bcarousel\b
