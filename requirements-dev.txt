@@ -1,0 +1,4 @@
+# Dev/test-only dependencies. Never copied into the Docker image.
+# anyio enables the in-memory async fastmcp.Client integration tests.
+pytest>=8.0,<9
+anyio>=4.0,<5

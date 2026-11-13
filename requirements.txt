@@ -1,0 +1,22 @@
+# Runtime dependencies. Pinned as `>=X,<Y` ranges.
+#
+# fastmcp 4.x pulls in mcp 2.x, the SDK line that serves MCP protocol
+# 2026-07-28.
+fastmcp>=4.1.4,<5
+
+# Google Cloud APIs used by the tools.
+google-cloud-bigquery>=3.0,<4
+sqlglot>=30.0,<31
+google-cloud-dataplex>=2.0,<3
+google-cloud-datacatalog-lineage>=0.7,<1
+google-auth>=2.30,<3
+google-cloud-logging>=3.10,<4
+
+# OAuth 2.1 (Google Workspace via OIDC): JWKS/RS256 verification, async JWKS
+# fetch, Google token-endpoint calls, and the Firestore-backed OAuth
+# handshake store.
+PyJWT>=2.0,<3
+cryptography>=46.0.5,<51
+httpx>=0.27,<1
+requests>=2.31,<3
+google-cloud-firestore>=2.16,<3

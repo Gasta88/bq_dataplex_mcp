@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and adjust. Terraform loads terraform.tfvars
+# automatically. The dev workspace appends "-dev" to service_name.
+
+project_id = "my-gcp-project"
+image      = "us-central1-docker.pkg.dev/my-gcp-project/my-repo/bq-dataplex-mcp:0.1.0"
+
+# Optional: use a dedicated runtime service account.
+# service_account = "bq-dataplex-mcp@my-gcp-project.iam.gserviceaccount.com"
+
+# Keep the service private until app-level OAuth is configured.
+invoker_members = []
+
+# audit_dataset = "bq_audit"
+# bigquery_reservation = "projects/my-gcp-project/locations/us-central1/reservations/my-reservation"
+
+# OAuth 2.1 (optional). These reference existing Secret Manager secrets; the
+# secrets, OAuth client, and Firestore database are not created by Terraform.
+# oauth_client_id_secret     = "bq-dataplex-mcp-oauth-client-id"
+# oauth_client_secret_secret = "bq-dataplex-mcp-oauth-client-secret"
+# oauth_base_url             = "https://bq-dataplex-mcp-abcdef-uc.a.run.app"
+# firestore_database_id      = "bq-dataplex-mcp-oauth"
+# google_workspace_domain    = "example.com"
