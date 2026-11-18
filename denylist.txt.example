@@ -1,0 +1,10 @@
+# Copy to denylist.txt and add your own patterns. denylist.txt is gitignored:
+# the terms it contains are themselves sensitive and must never be committed.
+#
+# Case-insensitive regular expressions, one per line. Blank lines and lines
+# starting with "#" are ignored. scripts/check_denylist.py scans tracked text
+# files with these and skips denylist.txt itself.
+#
+# Example (inactive):
+# \binternal-project-name\b
+# \bdeadbeef\b

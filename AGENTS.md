@@ -21,7 +21,8 @@ application lives in `app/`; Terraform for Cloud Run lives in `deploy/`.
 - Use `terraform fmt` after editing `deploy/*.tf`; `terraform validate` must
   pass on both workspaces.
 - Keep CI free of Google Cloud credentials. It runs tests, a Docker build,
-  `terraform fmt`/`validate`, the denylist scan, and gitleaks.
+  `terraform fmt`/`validate`, and gitleaks. The denylist scan is local-only and
+  not part of CI.
 
 ## Editing guidelines
 
@@ -40,7 +41,9 @@ application lives in `app/`; Terraform for Cloud Run lives in `deploy/`.
   "Use this / Not this / Args" structure and update
   `tests/test_main.py`'s docstring assertions when they change.
 - Run `pytest tests/ -v` before every push. The suite needs no credentials.
-- Run `python scripts/check_denylist.py` before publishing changes.
+- Run `python scripts/check_denylist.py` before publishing changes. It reads the
+  gitignored `denylist.txt` (create it from `denylist.txt.example`); never commit
+  the real patterns.
 - `scripts/smoke_test_dev.py` is the live, authenticated end-to-end check. It
   targets a deployed dev service only.
 

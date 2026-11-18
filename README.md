@@ -181,8 +181,10 @@ python scripts/smoke_test_dev.py --project my-project
 ## CI
 
 GitHub Actions runs the test suite, a validation-only Docker build,
-`terraform fmt`/`validate`, the denylist scan, and a gitleaks secret scan. It
-does not authenticate to Google Cloud or deploy anything.
+`terraform fmt`/`validate` and a gitleaks secret scan. It does not authenticate
+to Google Cloud or deploy anything. The denylist scan is local-only: copy
+`denylist.txt.example` to the gitignored `denylist.txt` and run
+`python scripts/check_denylist.py` before pushing.
 
 ## License
 

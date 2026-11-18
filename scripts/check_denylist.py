@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Fail if any denylisted term appears in the repository.
 
-Reads case-insensitive regular expressions from `denylist.txt` and scans every
-text file in the working tree, skipping VCS metadata, editor state, caches, and
-the denylist file itself. Prints `path:line: pattern` for each match and exits
-1 if anything matched.
+Reads case-insensitive regular expressions from the local-only `denylist.txt`
+and scans every text file in the working tree, skipping VCS metadata, editor
+state, caches, and the denylist file itself. `denylist.txt` is gitignored
+because the patterns are themselves sensitive; see `denylist.txt.example` for
+the format. Prints `path:line: pattern` for each match and exits 1 if anything
+matched.
 
 Usage:
     python scripts/check_denylist.py
