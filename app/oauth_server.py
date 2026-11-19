@@ -29,15 +29,16 @@ import logging
 import secrets
 import time
 import urllib.parse
+from typing import cast
 
 import jwt as pyjwt
 from mcp.shared.auth import OAuthMetadata, ProtectedResourceMetadata
+from pydantic import AnyHttpUrl
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
 import app.oauth_store as store
 from app.config import settings
-from app.oauth_store import StoreUnavailable
 from app.google_auth import (
     OAuthError,
     build_authorization_url,
@@ -46,6 +47,7 @@ from app.google_auth import (
     revoke_refresh_token,
 )
 from app.jwt_auth import WORKSPACE_IDENTITY_REQUIRED, hd_claim_is_valid
+from app.oauth_store import StoreUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +115,8 @@ async def oauth_protected_resource_metadata(request: Request) -> Response:
     if not settings.oauth_base_url:
         return _oauth_not_configured()
     metadata = ProtectedResourceMetadata(
-        resource=f"{settings.oauth_base_url}/mcp",
-        authorization_servers=[settings.oauth_base_url],
+        resource=cast(AnyHttpUrl, f"{settings.oauth_base_url}/mcp"),
+        authorization_servers=[cast(AnyHttpUrl, settings.oauth_base_url)],
         scopes_supported=["openid", "email"],
         resource_name=_RESOURCE_NAME,
     )
@@ -129,11 +131,11 @@ async def oauth_authorization_server_metadata(request: Request) -> Response:
         return _oauth_not_configured()
     base = settings.oauth_base_url
     metadata = OAuthMetadata(
-        issuer=base,
-        authorization_endpoint=f"{base}/oauth/authorize",
-        token_endpoint=f"{base}/oauth/token",
-        registration_endpoint=f"{base}/oauth/register",
-        revocation_endpoint=f"{base}/oauth/revoke",
+        issuer=cast(AnyHttpUrl, base),
+        authorization_endpoint=cast(AnyHttpUrl, f"{base}/oauth/authorize"),
+        token_endpoint=cast(AnyHttpUrl, f"{base}/oauth/token"),
+        registration_endpoint=cast(AnyHttpUrl, f"{base}/oauth/register"),
+        revocation_endpoint=cast(AnyHttpUrl, f"{base}/oauth/revoke"),
         scopes_supported=["openid", "email"],
         response_types_supported=["code"],
         grant_types_supported=["authorization_code", "refresh_token"],
@@ -228,7 +230,9 @@ async def oauth_authorize(request: Request) -> Response:
             "Unknown or expired client registration. Please reconnect your MCP "
             "client so it can re-register, then try signing in again."
         )
-    if redirect_uri not in client["redirect_uris"]:
+    # `client` is only non-None when `client_id` was truthy above.
+    assert client_id is not None
+    if not redirect_uri or redirect_uri not in client["redirect_uris"]:
         return _error_page("redirect_uri does not match the registered value.")
     if (
         q.get("response_type") != "code"
@@ -275,10 +279,18 @@ async def oauth_callback(request: Request) -> Response:
             "This sign-in link has expired or was already used. Please retry "
             "from your MCP client."
         )
+    # `txn` is only non-None when `txn_id` was truthy above.
+    assert txn_id is not None
 
     if google_error:
         await store.delete_transaction(txn_id)
         return _error_page(f"Google sign-in was not completed: {google_error}")
+
+    if not code:
+        return _error_page(
+            "Sign-in failed: Google did not return an authorization code.",
+            status_code=502,
+        )
 
     try:
         loop = asyncio.get_running_loop()
@@ -576,7 +588,7 @@ async def oauth_revoke(request: Request) -> Response:
         return _oauth_not_configured()
     form = await request.form()
     token = form.get("token")
-    if token:
+    if isinstance(token, str) and token:
         # Fetch the record to get Google's refresh token for upstream revocation.
         # Ignores local expiry (unlike get_refresh_token) — the doc may still
         # physically exist (grace window, or pending Firestore TTL sweep) even

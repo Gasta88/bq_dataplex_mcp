@@ -119,7 +119,7 @@ class DataplexClient:
                     # presence idiom as `data_quality_result` above --
                     # `dim.dimension` is a `DataQualityDimension` message
                     # (`{name: str}`), so the real dimension name lives at
-                    # `dim.dimension.name` (see module docstring's 
+                    # `dim.dimension.name` (see module docstring's
                     # section for why this replaced the prior "[object
                     # Object]" literal).
                     "dimension": dim.dimension.name if "dimension" in dim else "Unknown",

@@ -79,7 +79,7 @@ async def _bounded(op: str, call: Callable[[], Awaitable[T]]) -> T:
     for attempt in range(1, _MAX_ATTEMPTS + 1):
         try:
             return await asyncio.wait_for(call(), timeout=settings.firestore_timeout_seconds)
-        except (asyncio.TimeoutError, *_TRANSIENT_ERRORS) as exc:
+        except (TimeoutError, *_TRANSIENT_ERRORS) as exc:
             last_exc = exc
             logger.warning(
                 "firestore_timeout: op=%s attempt=%d/%d error=%s",
@@ -236,7 +236,7 @@ async def consume_code(code: str) -> dict[str, Any] | None:
         return await asyncio.wait_for(
             _txn(client.transaction()), timeout=settings.firestore_timeout_seconds
         )
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         logger.warning("firestore_timeout: op=consume_code attempt=1/1 error=TimeoutError")
         raise StoreUnavailable("consume_code") from exc
 

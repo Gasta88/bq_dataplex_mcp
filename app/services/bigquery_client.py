@@ -12,7 +12,7 @@ tool runs `validate_sql_query` before delegating here.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from google.cloud import bigquery
@@ -51,7 +51,7 @@ def _reraise_sanitized(exc: Exception) -> None:
     """
     if hasattr(exc, "message"):
         # GoogleAPICallError and similar: sanitize message directly.
-        exc.message = redact_credentials_from_text(exc.message)  # type: ignore[attr-defined]
+        exc.message = redact_credentials_from_text(exc.message)
     # For all exceptions (with or without .message), also update args for completeness.
     sanitized = sanitize_error_message(exc)
     exc.args = (sanitized, *exc.args[1:])
@@ -61,9 +61,8 @@ def _format_js_iso(dt: datetime) -> str:
     """Format a UTC-aware `datetime` to match JS `Date.prototype.toISOString()`:
     millisecond-precision, trailing `Z` (not `+00:00`).
     """
-    from datetime import timezone
 
-    dt_utc = dt.astimezone(timezone.utc)
+    dt_utc = dt.astimezone(UTC)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt_utc.microsecond // 1000:03d}Z"
 
 

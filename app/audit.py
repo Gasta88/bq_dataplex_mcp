@@ -30,10 +30,12 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from mcp.server.auth.middleware.auth_context import get_access_token  # SDK-provided; flag on SDK version bumps
+from mcp.server.auth.middleware.auth_context import (
+    get_access_token,  # SDK-provided; flag on SDK version bumps
+)
 
 from app.config import settings
 from app.pricing import estimate_cost_usd
@@ -237,7 +239,7 @@ def audit_tool_call(fn):
             response_json = _safe_json(result)
         finally:
             latency_ms = int((time.perf_counter() - t0) * 1000)
-            created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            created_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
             # Field names/set must match the live BigQuery table schema exactly —
             # bq_dataplex_mcp_audit_tool_called has no success/errorMessage
             # columns, and the timestamp column is createdAt, not calledAt.

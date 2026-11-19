@@ -216,8 +216,9 @@ def get_table_metadata(dataset_id: str, table_id: str) -> dict:
     table_id = validate_table_id(table_id)
 
     cache_key = cache.generate_key("metadata", dataset_id, table_id)
-    if cache.has(cache_key):
-        return cache.get(cache_key)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     metadata = _get_bq_client().get_table_metadata(dataset_id, table_id)
     cache.set(cache_key, metadata)
@@ -244,8 +245,9 @@ def get_data_lineage(dataset_id: str, table_id: str) -> dict:
     table_id = validate_table_id(table_id)
 
     cache_key = cache.generate_key("lineage", dataset_id, table_id)
-    if cache.has(cache_key):
-        return cache.get(cache_key)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         lineage = _get_lineage_client().get_table_lineage(dataset_id, table_id, 3)
@@ -286,8 +288,9 @@ def get_data_quality_results(dataset_id: str, table_id: str) -> dict:
     table_id = validate_table_id(table_id)
 
     cache_key = cache.generate_key("quality", dataset_id, table_id)
-    if cache.has(cache_key):
-        return cache.get(cache_key)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     result = _get_dataplex_client().get_data_quality_results(dataset_id, table_id)
 
