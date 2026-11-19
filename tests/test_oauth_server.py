@@ -17,9 +17,10 @@ import time
 import urllib.parse
 from unittest.mock import MagicMock
 
-import app.oauth_server as oauth_server
 import pytest
 from httpx import ASGITransport, AsyncClient
+
+import app.oauth_server as oauth_server
 from tests._oauth_store_fake import FakeOAuthStore
 
 _BASE_URL = "https://bq-dataplex-mcp.example.com"

@@ -12,7 +12,6 @@ from unittest.mock import patch
 import google.protobuf.struct_pb2 as struct_pb2
 import pytest
 from google.api_core.exceptions import NotFound, PermissionDenied
-
 from google.cloud import datacatalog_lineage as dl
 
 from app.services.lineage_client import LineageClient

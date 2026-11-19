@@ -2,3 +2,8 @@
 # anyio enables the in-memory async fastmcp.Client integration tests.
 pytest>=8.0,<9
 anyio>=4.0,<5
+
+# Quality gates enforced by .github/workflows/ci.yaml.
+pytest-cov>=7.0,<8
+ruff>=0.17,<1
+mypy>=2.4,<3

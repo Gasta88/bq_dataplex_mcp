@@ -39,14 +39,14 @@ from typing import Any
 import httpx
 import jwt as pyjwt
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
-from jwt.algorithms import RSAAlgorithm
-
 from fastmcp.server.auth import AccessToken, AuthProvider
+from jwt.algorithms import RSAAlgorithm
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from app.config import Settings, settings as _default_settings
+from app.config import Settings
+from app.config import settings as _default_settings
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ WORKSPACE_IDENTITY_REQUIRED = "workspace_identity_required"
 # expressions.
 TOKEN_EXPIRED = "token_expired"
 
-# Log line emitted (at INFO) when a token is accepted via the 
+# Log line emitted (at INFO) when a token is accepted via the
 # whitelisted-CI-service-account-identity bypass (missing/mismatched `hd`,
 # but an exactly matching, non-empty configured `email`). Stable across
 # releases and safe to use in Cloud Logging filter expressions.

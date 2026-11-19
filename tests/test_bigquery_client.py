@@ -5,7 +5,7 @@ is mocked throughout -- no live GCP calls, no credentials needed.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -206,8 +206,8 @@ def _fake_table(
     table.labels = labels
     table.num_rows = num_rows
     table.num_bytes = num_bytes
-    table.created = created or datetime(2026, 1, 1, tzinfo=timezone.utc)
-    table.modified = modified or datetime(2026, 1, 1, tzinfo=timezone.utc)
+    table.created = created or datetime(2026, 1, 1, tzinfo=UTC)
+    table.modified = modified or datetime(2026, 1, 1, tzinfo=UTC)
     return table
 
 
@@ -234,8 +234,8 @@ def test_get_table_metadata_matches_api_contracts_example(mock_bq_client):
         labels={"team": "data-engineering"},
         num_rows=1234567,
         num_bytes=98765432,
-        created=datetime(2026, 1, 15, 9, 0, 0, 0, tzinfo=timezone.utc),
-        modified=datetime(2026, 7, 20, 4, 12, 33, 500000, tzinfo=timezone.utc),
+        created=datetime(2026, 1, 15, 9, 0, 0, 0, tzinfo=UTC),
+        modified=datetime(2026, 7, 20, 4, 12, 33, 500000, tzinfo=UTC),
     )
     mock_bq_client.get_table.return_value = table
 
@@ -283,8 +283,8 @@ def test_get_table_metadata_num_rows_and_num_bytes_are_strings(mock_bq_client):
 
 def test_get_table_metadata_creation_and_modified_time_match_js_iso_format(mock_bq_client):
     table = _fake_table(
-        created=datetime(2026, 3, 4, 5, 6, 7, 8000, tzinfo=timezone.utc),
-        modified=datetime(2026, 3, 4, 5, 6, 7, 8000, tzinfo=timezone.utc),
+        created=datetime(2026, 3, 4, 5, 6, 7, 8000, tzinfo=UTC),
+        modified=datetime(2026, 3, 4, 5, 6, 7, 8000, tzinfo=UTC),
     )
     mock_bq_client.get_table.return_value = table
 

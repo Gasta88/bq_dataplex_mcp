@@ -11,6 +11,10 @@ application lives in `app/`; Terraform for Cloud Run lives in `deploy/`.
 - Target `linux/amd64`, base image `python:3.11-slim-bookworm`.
 - Runtime dependencies go in `requirements.txt`; test-only dependencies go in
   `requirements-dev.txt`. Keep the Dockerfile minimal.
+- `requirements.lock` is generated from `requirements.txt` and installed by the
+  Dockerfile with `--require-hashes`. Regenerate it whenever `requirements.txt`
+  changes:
+  `uv pip compile requirements.txt --generate-hashes --python-version 3.11 --python-platform x86_64-unknown-linux-gnu --output-file requirements.lock`.
 - Bump `VERSION` before merging to `main`. Its contents are the image tag.
 - The image is environment-agnostic. All runtime configuration is read from
   environment variables by `app/config.py`'s `Settings` dataclass.
@@ -41,6 +45,8 @@ application lives in `app/`; Terraform for Cloud Run lives in `deploy/`.
   "Use this / Not this / Args" structure and update
   `tests/test_main.py`'s docstring assertions when they change.
 - Run `pytest tests/ -v` before every push. The suite needs no credentials.
+- Run `ruff check app tests` and `mypy app` before every push; CI enforces both
+  plus a 93% coverage floor (`--cov=app --cov-fail-under=93`).
 - Run `python scripts/check_denylist.py` before publishing changes. It reads the
   gitignored `denylist.txt` (create it from `denylist.txt.example`); never commit
   the real patterns.

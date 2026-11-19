@@ -1,5 +1,9 @@
 # bq_dataplex_mcp
 
+[![CI](https://github.com/Gasta88/bq_dataplex_mcp/actions/workflows/ci.yaml/badge.svg)](https://github.com/Gasta88/bq_dataplex_mcp/actions/workflows/ci.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+
 An MCP (Model Context Protocol) server for BigQuery and Dataplex. It exposes a
 `streamable-http` endpoint that gives MCP clients read-only access to BigQuery
 metadata, ad-hoc SQL, table lineage, and Dataplex data-quality results.
@@ -37,13 +41,75 @@ through environment variables.
 The metadata, lineage, and quality tools use an in-memory, process-lifetime
 cache for identical arguments. `ping` and `execute_sql` are never cached.
 
+## Connecting a client
+
+Point any streamable-HTTP MCP client at `/mcp`. Claude Desktop and most other
+clients accept a JSON server definition:
+
+```json
+{
+  "mcpServers": {
+    "bq-dataplex": {
+      "type": "http",
+      "url": "https://<cloud-run-service-url>/mcp"
+    }
+  }
+}
+```
+
+Or call it directly with the FastMCP Python client:
+
+```python
+import asyncio
+
+from fastmcp import Client
+
+
+async def main() -> None:
+    async with Client("http://localhost:8080/mcp") as client:
+        print(await client.list_tools())
+        print(await client.call_tool("ping", {}))
+
+
+asyncio.run(main())
+```
+
+`ping` is the only tool that needs no Google Cloud credentials, so it is the
+fastest end-to-end check. Its response, captured from a local run:
+
+```json
+{"status": "ok", "service": "bq-dataplex-mcp"}
+```
+
+The data tools return structured results in the same shape. For example, an
+`execute_sql` real run returns rows plus the schema and the cost figures:
+
+```json
+{
+  "rows": [{"dataset_id": "analytics", "table_count": 12}],
+  "rowCount": 1,
+  "schema": [{"name": "dataset_id", "type": "STRING", "mode": "NULLABLE"},
+             {"name": "table_count", "type": "INTEGER", "mode": "NULLABLE"}],
+  "totalBytesProcessed": "2097152",
+  "cacheHit": false,
+  "jobId": "job_example",
+  "estimatedCostUsd": 0.000011920928955078125
+}
+```
+
+That second payload is illustrative; only the `ping` response above was captured
+verbatim. The remaining tools need Application Default Credentials, described
+under [Local development](#local-development).
+
 ## Layout
 
 ```
 .
 ├── Dockerfile
 ├── requirements.txt
+├── requirements.lock
 ├── VERSION
+├── CHANGELOG.md
 ├── app/
 │   ├── config.py              # env-driven Settings
 │   ├── validation.py          # identifier and read-only SQL validation
@@ -180,11 +246,29 @@ python scripts/smoke_test_dev.py --project my-project
 
 ## CI
 
-GitHub Actions runs the test suite, a validation-only Docker build,
-`terraform fmt`/`validate` and a gitleaks secret scan. It does not authenticate
-to Google Cloud or deploy anything. The denylist scan is local-only: copy
-`denylist.txt.example` to the gitignored `denylist.txt` and run
-`python scripts/check_denylist.py` before pushing.
+GitHub Actions runs ruff, mypy, the test suite with a 93% coverage floor, a
+validation-only Docker build, `terraform fmt`/`validate` and a gitleaks secret
+scan. It does not authenticate to Google Cloud or deploy anything. The denylist
+scan is local-only: copy `denylist.txt.example` to the gitignored
+`denylist.txt` and run `python scripts/check_denylist.py` before pushing.
+
+Run the quality gates locally with:
+
+```bash
+ruff check app tests
+mypy app
+pytest tests/ -v --cov=app --cov-report=term-missing --cov-fail-under=93
+```
+
+`requirements.txt` holds the human-edited ranges; `requirements.lock` is the
+hash-pinned resolution the Docker image installs with `--require-hashes`.
+Regenerate it after changing `requirements.txt`:
+
+```bash
+uv pip compile requirements.txt --generate-hashes \
+  --python-version 3.11 --python-platform x86_64-unknown-linux-gnu \
+  --output-file requirements.lock
+```
 
 ## License
 

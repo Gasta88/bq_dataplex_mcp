@@ -20,10 +20,12 @@ import json
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+from mcp.server.auth.middleware.auth_context import AuthenticatedUser, auth_context_var
+from mcp.server.auth.provider import AccessToken
 
 import app.audit as audit_module
 from app.audit import (
@@ -33,8 +35,6 @@ from app.audit import (
     start_audit_flusher,
 )
 from app.config import settings
-from mcp.server.auth.middleware.auth_context import AuthenticatedUser, auth_context_var
-from mcp.server.auth.provider import AccessToken
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -445,7 +445,7 @@ class TestDecoratorMetadata:
         row = _audit_deque[0]
         assert row["createdAt"].endswith("Z"), f"createdAt not UTC: {row['createdAt']}"
         dt = datetime.fromisoformat(row["createdAt"].replace("Z", "+00:00"))
-        assert dt.tzinfo == timezone.utc
+        assert dt.tzinfo == UTC
 
     def test_functools_wraps_preserves_name(self):
         fn = _make_simple_tool(name="my_tool")

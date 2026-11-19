@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers to inject fake OAuth settings without touching process env permanently
 # ---------------------------------------------------------------------------

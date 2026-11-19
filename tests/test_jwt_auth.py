@@ -18,12 +18,11 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 from app.config import Settings
 from app.jwt_auth import (
-    JWTAuthProvider,
-    WORKSPACE_IDENTITY_REQUIRED,
-    TOKEN_EXPIRED,
     CI_SERVICE_ACCOUNT_IDENTITY_ACCEPTED,
+    TOKEN_EXPIRED,
+    WORKSPACE_IDENTITY_REQUIRED,
+    JWTAuthProvider,
 )
-
 
 # ---------------------------------------------------------------------------
 # anyio backend restriction (mirrors tests/test_main.py's own fixture)
